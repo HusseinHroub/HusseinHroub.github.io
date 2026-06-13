@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Score Keeper: Game Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:   #1A0005;
+      --navy2:  #230008;
+      --navy3:  #3D000F;
+      --green:  #CD1B3B;
+      --green2: #B81734;
+      --white:  #FAFAFA;
+      --slate:  #C4889A;
+      --card-bg:#2A000C;
+      --accent: #1FCC27;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--navy);
+      color: var(--white);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 5rem 1.5rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Card-suit ambient decoration */
+    .suits {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .suits span {
+      position: absolute;
+      font-size: clamp(4rem, 10vw, 9rem);
+      opacity: 0.07;
+      color: var(--green);
+      user-select: none;
+    }
+    .suits span:nth-child(1) { top: 8%;  left:  5%; }
+    .suits span:nth-child(2) { top: 15%; right: 8%; font-size: clamp(3rem, 7vw, 7rem); }
+    .suits span:nth-child(3) { bottom: 20%; left: 12%; font-size: clamp(2.5rem, 6vw, 6rem); }
+    .suits span:nth-child(4) { bottom: 10%; right: 6%; font-size: clamp(5rem, 12vw, 11rem); }
+
+    .hero-app-row {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      margin-bottom: 1.5rem;
+      justify-content: center;
+    }
+
+    .app-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(205,27,59,0.4);
+      object-fit: cover;
+    }
+
+    .hero-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(2rem, 6vw, 3.6rem);
+      font-weight: 800;
+      line-height: 1.1;
+      color: var(--white);
+    }
+
+    .hero-title span {
+      color: var(--green);
+    }
+
+    .play-badge-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-left: 0.6rem;
+      vertical-align: middle;
+      background: var(--navy3);
+      border: 1px solid rgba(205,27,59,0.3);
+      border-radius: 8px;
+      padding: 0.25rem 0.6rem;
+      text-decoration: none;
+      transition: border-color 0.2s;
+    }
+    .play-badge-inline:hover { border-color: var(--green); box-shadow: 0 0 0 1px var(--green); }
+    .play-badge-inline svg { width: 18px; height: 18px; }
+    .play-badge-inline span {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--slate);
+      letter-spacing: 0.03em;
+    }
+
+    .hero-tagline {
+      margin-top: 1.2rem;
+      font-size: clamp(1rem, 2.5vw, 1.2rem);
+      color: var(--slate);
+      max-width: 520px;
+    }
+
+    .hero-suits-row {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.8rem;
+      font-size: 1.8rem;
+      opacity: 0.5;
+      color: var(--green);
+    }
+
+    .hero-cta {
+      margin-top: 2.4rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: var(--green);
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      padding: 0.85rem 2rem;
+      border-radius: 50px;
+      text-decoration: none;
+      box-shadow: 0 4px 24px rgba(205,27,59,0.45);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .hero-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(205,27,59,0.6);
+    }
+    .hero-cta svg { width: 22px; height: 22px; }
+
+    /* ── DIVIDER ── */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--navy3) 30%, var(--navy3) 70%, transparent);
+      margin: 0;
+    }
+
+    /* ── DESCRIPTION ── */
+    .section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 5rem 1.5rem;
+    }
+
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 0.8rem;
+    }
+
+    .section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 700;
+      margin-bottom: 1.2rem;
+    }
+
+    .section-body {
+      color: var(--slate);
+      font-size: 1.05rem;
+      max-width: 680px;
+    }
+
+    /* ── FEATURES GRID ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.2rem;
+      margin-top: 3rem;
+    }
+
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--navy3);
+      border-radius: 16px;
+      padding: 1.6rem 1.4rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .feature-card:hover {
+      border-color: var(--green);
+      transform: translateY(-3px);
+      box-shadow: 0 4px 20px rgba(205,27,59,0.2);
+    }
+
+    .feature-icon {
+      font-size: 1.8rem;
+      margin-bottom: 0.8rem;
+      display: block;
+    }
+
+    .feature-title {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .feature-desc {
+      font-size: 0.88rem;
+      color: var(--slate);
+      line-height: 1.55;
+    }
+
+    /* ── SCREENSHOTS ── */
+    .screenshots-section {
+      background: var(--navy2);
+      padding: 5rem 1.5rem;
+      overflow: hidden;
+    }
+
+    .screenshots-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .screenshots-strip {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      padding-bottom: 1rem;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: var(--navy3) transparent;
+      margin-top: 2.5rem;
+    }
+    .screenshots-strip::-webkit-scrollbar { height: 4px; }
+    .screenshots-strip::-webkit-scrollbar-track { background: transparent; }
+    .screenshots-strip::-webkit-scrollbar-thumb { background: var(--navy3); border-radius: 4px; }
+
+    .screenshot {
+      flex: 0 0 auto;
+      width: clamp(200px, 40vw, 280px);
+      border-radius: 12px;
+      overflow: hidden;
+      scroll-snap-align: start;
+      border: 1px solid var(--navy3);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+      transition: transform 0.2s;
+    }
+    .screenshot:hover { transform: scale(1.03); }
+    .screenshot img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* ── HOW TO INSTALL ── */
+    .install-section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 5rem 1.5rem;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.4rem;
+      margin-top: 2.5rem;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .step-num {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--accent);
+      opacity: 0.5;
+      line-height: 1;
+    }
+
+    .step-text {
+      font-size: 0.95rem;
+      color: var(--slate);
+    }
+
+    .step-text strong {
+      display: block;
+      color: var(--white);
+      font-size: 1rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .install-cta {
+      margin-top: 2.4rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: transparent;
+      color: var(--green);
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 0.7rem 1.6rem;
+      border-radius: 50px;
+      text-decoration: none;
+      border: 2px solid var(--green);
+      transition: background 0.2s, color 0.2s;
+    }
+    .install-cta:hover {
+      background: var(--green);
+      color: #fff;
+    }
+
+    /* ── FOOTER / YOUTUBE ── */
+    footer {
+      background: var(--navy2);
+      border-top: 1px solid var(--navy3);
+      padding: 3.5rem 1.5rem;
+      text-align: center;
+    }
+
+    .footer-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--slate);
+      margin-bottom: 1rem;
+    }
+
+    .youtube-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.7rem;
+      background: #FF0000;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 0.8rem 1.8rem;
+      border-radius: 50px;
+      text-decoration: none;
+      transition: opacity 0.2s, transform 0.15s;
+      box-shadow: 0 4px 20px rgba(255,0,0,0.3);
+    }
+    .youtube-link:hover { opacity: 0.9; transform: translateY(-2px); }
+    .youtube-link svg { width: 26px; height: 26px; }
+
+    .footer-copy {
+      margin-top: 2rem;
+      font-size: 0.8rem;
+      color: var(--slate);
+    }
+
+    @media (max-width: 600px) {
+      .hero-app-row { flex-direction: column; gap: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ HERO ═══ -->
+  <section class="hero">
+    <div class="suits" aria-hidden="true">
+      <span>♠</span><span>♥</span><span>♣</span><span>♦</span>
+    </div>
+
+    <div class="hero-app-row">
+      <img
+        class="app-icon"
+        src="https://play-lh.googleusercontent.com/pSLTzLDAH5QenFflS8SBXe-HgDDx1anaEJFXgX5ypTAt8kNTYZ_Xkg-iv-4JixcQebM=w240-h480"
+        alt="Score Keeper icon"
+      />
+      <div style="text-align:left;">
+        <div class="hero-title">
+          Score <span>Keeper</span>
+          <a
+            href="https://play.google.com/store/apps/details?id=com.hroub.cardv2"
+            target="_blank"
+            rel="noopener"
+            class="play-badge-inline"
+            aria-label="View on Google Play"
+          >
+            <!-- Google Play icon -->
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3.18 1.07C2.78 1.29 2.5 1.72 2.5 2.24v19.52c0 .52.28.95.68 1.17l.1.06 10.94-10.94v-.26L3.28 1.01l-.1.06z" fill="#EA4335"/>
+              <path d="M17.85 15.77l-3.63-3.64v-.26l3.63-3.63.08.05 4.3 2.44c1.23.7 1.23 1.84 0 2.54l-4.3 2.44-.08.06z" fill="#FBBC04"/>
+              <path d="M17.93 15.71L14.22 12 3.18 23.04c.41.43 1.08.49 1.83.05l12.92-7.38" fill="#34A853"/>
+              <path d="M17.93 8.29L5.01.91C4.26.47 3.59.53 3.18.96L14.22 12l3.71-3.71z" fill="#4285F4"/>
+            </svg>
+            <span>Google Play</span>
+          </a>
+        </div>
+        <div style="font-family:'Inter',sans-serif;font-size:0.95rem;color:var(--slate);margin-top:0.2rem;">Game Tracker</div>
+      </div>
+    </div>
+
+    <p class="hero-tagline">
+      No more paper. No more arguments. Just clean, fast scorekeeping for every game night.
+    </p>
+
+    <div class="hero-suits-row" aria-hidden="true">♠ ♥ ♦ ♣</div>
+
+    <a
+      href="https://play.google.com/store/apps/details?id=com.hroub.cardv2"
+      target="_blank"
+      rel="noopener"
+      class="hero-cta"
+    >
+      <!-- Play arrow -->
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      Get it on Google Play
+    </a>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ═══ DESCRIPTION + FEATURES ═══ -->
+  <section class="section">
+    <p class="section-label">About the App</p>
+    <h2 class="section-title">Score Keeper: Game Tracker</h2>
+    <p class="section-body">
+      Score Keeper is a simple and fast score tracking app for card games, board games, and any
+      multiplayer game where you need to keep score. Perfect for card games like
+      <strong>Trix, Baloot, Tarneeb, Rummy, Basra</strong>, and more — no paper, no pen, no hassle.
+    </p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">👥</span>
+        <div class="feature-title">2–5 Teams or Players</div>
+        <div class="feature-desc">Supports up to 5 teams in a single game — great for large groups and big game nights.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📊</span>
+        <div class="feature-title">Running Totals</div>
+        <div class="feature-desc">The app automatically calculates and displays the running total after every round.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">✏️</span>
+        <div class="feature-title">Edit Anytime</div>
+        <div class="feature-desc">Add, edit, or delete score entries at any point during the game without losing progress.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📁</span>
+        <div class="feature-title">Full Game History</div>
+        <div class="feature-desc">Every game is automatically saved. Browse past games, search by team name, and reload any session.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔍</span>
+        <div class="feature-title">Search Games</div>
+        <div class="feature-desc">Quickly find any past game by searching through your history by team or player name.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">✨</span>
+        <div class="feature-title">Clean Interface</div>
+        <div class="feature-desc">Simple, distraction-free design — no clutter, no learning curve, just tap and score.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ═══ SCREENSHOTS ═══ -->
+  <section class="screenshots-section">
+    <div class="screenshots-inner">
+      <p class="section-label">See It in Action</p>
+      <h2 class="section-title">Inside the App</h2>
+      <p class="section-body" style="color:var(--slate);">
+        A clean, focused interface designed around game night — not around complexity.
+      </p>
+      <div class="screenshots-strip" role="list" aria-label="App screenshots">
+        <div class="screenshot" role="listitem">
+          <img src="https://play-lh.googleusercontent.com/IsiY9zkZsVvOyCz1ILVB1TvRNDdrYCessEWVL0YS0fBnHZWWELggsafGahRXiDiwBm_L=w526-h296" alt="Score Keeper screenshot 1" loading="lazy" />
+        </div>
+        <div class="screenshot" role="listitem">
+          <img src="https://play-lh.googleusercontent.com/zigBKFOksLoU0P35170sIPHAneeuRyDeDd4immlJoOyz9WzID2b69eWUubcdfVmPDfU=w526-h296" alt="Score Keeper screenshot 2" loading="lazy" />
+        </div>
+        <div class="screenshot" role="listitem">
+          <img src="https://play-lh.googleusercontent.com/CNipv0pNc6_pab8WNry1IzIKI6PEnJsAaoD3v8PWK0JhDUWLPSO_eroxfeqppVKtf_x8=w526-h296" alt="Score Keeper screenshot 3" loading="lazy" />
+        </div>
+        <div class="screenshot" role="listitem">
+          <img src="https://play-lh.googleusercontent.com/Dky0qdcszRvNqy3P2OXDm7bBC6pqI0TuI5GIHYT-x47xMKcu9Bv9-rJw5V6l4Pjsy7ha=w526-h296" alt="Score Keeper screenshot 4" loading="lazy" />
+        </div>
+        <div class="screenshot" role="listitem">
+          <img src="https://play-lh.googleusercontent.com/AB9dlwa671jbm4BaSDeJvTi0kclHTqexF9XzSbLT3VlF3HV0aB2FpBHciYOD4l-kEZ5B=w526-h296" alt="Score Keeper screenshot 5" loading="lazy" />
+        </div>
+        <div class="screenshot" role="listitem">
+          <img src="https://play-lh.googleusercontent.com/XJj_-Ri18pkitkKT87DI6J2KpUImqBjbkDX695Va50GwmzdPmdXkQJ_y1LAS1UFzk_k=w526-h296" alt="Score Keeper screenshot 6" loading="lazy" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ═══ HOW TO INSTALL ═══ -->
+  <section class="install-section">
+    <p class="section-label">How to Install</p>
+    <h2 class="section-title">On Your Android in Seconds</h2>
+    <p class="section-body">
+      Score Keeper is free to download and available on the Google Play Store. No account needed to track scores.
+    </p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-text">
+          <strong>Open Google Play</strong>
+          Launch the Play Store on your Android device.
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-text">
+          <strong>Search & Find</strong>
+          Search for "Score Keeper Game Tracker" or use the button below.
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-text">
+          <strong>Tap Install</strong>
+          Hit Install — it's free, lightweight, and ready in moments.
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-text">
+          <strong>Start a Game</strong>
+          Name your teams, tap +, and let the app handle the math.
+        </div>
+      </div>
+    </div>
+
+    <a
+      href="https://play.google.com/store/apps/details?id=com.hroub.cardv2"
+      target="_blank"
+      rel="noopener"
+      class="install-cta"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      Download on Google Play
+    </a>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ═══ FOOTER / YOUTUBE ═══ -->
+  <footer>
+    <p class="footer-label">Follow the Developer</p>
+    <a
+      href="https://www.youtube.com/@anything....4486/featured"
+      target="_blank"
+      rel="noopener"
+      class="youtube-link"
+      aria-label="Hussein Hroub on YouTube"
+    >
+      <!-- YouTube icon -->
+      <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+      </svg>
+      Hussein Hroub on YouTube
+    </a>
+  </footer>
+
+</body>
+</html>
